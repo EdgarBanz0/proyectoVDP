@@ -30,24 +30,17 @@ Pre-requisitos:
  2. Instalación de librerias GTK para graficos de wxWidgets:
 
         $sudo apt install libgtk-3-dev
-
         $sudo apt install libgl1-mesa-dev
-
         $sudo apt install libglu1-mesa-dev
-
         $sudo apt install libwebkit2gtk-4.0-dev
 
  3. Instalación de wxWidgets desde el repositorio basado en la documentación disponible en https://github.com/wxWidgets/wxWidgets/blob/master/docs/gtk/install.md
    Los comandos suponen una distribución basada en Debian tal como lo es Ubuntu:
 
         $git clone --recurse-submodules https://github.com/wxWidgets/wxWidgets.git
-
         $cd wxWidgets/
-
         $mkdir buildgtk
-
         $cd buildgtk/
-
         $../configure --with-gtk
 
     (El numero sobre el comando siguiente coincide con los nucleos en el procesador que ejecutará el programa,
@@ -61,9 +54,7 @@ Pre-requisitos:
     //en los archivos instalados de wxWidgets, para el ejemplo más sencillo esto es:
 
         $cd samples/minimal
-
         $make
-
         $./minimal
 
 
@@ -71,9 +62,7 @@ Pre-requisitos:
 Con la carpeta del proyecto localizada en una ruta X del sistema, se puede ejecutar a partir del archivo "Makefile" como:
 
     $cd X/proyectoVDP/build
-
     $make
-
     $./vdpApp
     
 //En caso de que se muestren advertencias estilo 
