@@ -18,6 +18,8 @@ Los argumentos de ejecución son:
 Programa que implementa el programa descrito en RK_solver.c haciendo uso de una interfaz grafica con wxWidgets en C++,
 es necesario tener todas las dependencias wxWidgets así como de GNUPLOT.
 
+![](https://github.com/EdgarBanz0/proyectoVDP/blob/main/resources/gifVDP.gif)
+
 Pre-requisitos:
  Comandos de Linux utilizados para la configuración de wxWidgets desde un
  sub-sistema en windows (WSL) en su distibución de Ubuntu:
