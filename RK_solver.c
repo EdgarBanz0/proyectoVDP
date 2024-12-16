@@ -6,10 +6,16 @@
     11/23/2024
 */
 
-#include "tools.h"
-#include "matrixsltn.h"
-#include "factrmethods.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 
+//van der Pol parameters
+double v1;
+double v2;  //depolarization - polarization
+double mu;  //damping factor 
+double d;
+double e;   //frequency
 
 void plotGNU(int total_size,double *range){
     //iniciar aplicacion GNUPLOT
@@ -20,14 +26,11 @@ void plotGNU(int total_size,double *range){
     fprintf(fPlotter,"set title \"Potencial de acción\" \n");
     fprintf(fPlotter,"set xlabel \" tiempo(s) \" \n");
     fprintf(fPlotter,"set xrange [%f:%f] \n",range[0],range[1]);
-    fprintf(fPlotter,"set ylabel \" V(mv) \" \n");
+    fprintf(fPlotter,"set ylabel \" u \" \n");
     fprintf(fPlotter,"set yrange [-4:4] \n");
 
     //crear grafica
-    fprintf(fPlotter, "plot \"y_sol.txt\" using 1:2 smooth csplines lw 3 lt 6 lc rgb \"blue\" title \"Nodo Sinoatrial \" \n");
-    //fprintf(fPlotter, "\"l_sol.txt\" using 1:2 smooth csplines lw 3 lt 4 lc rgb \"red\" title \"Sol. Linces.\",");
-    //fprintf(fPlotter, "\"c_data.txt\" pt 6 ps 1.5 lc rgb \"blue\" title \"Datos Conejos.\",");
-    //fprintf(fPlotter, "\"l_data.txt\" pt 7 ps 1.5 lc rgb \"red\" title \"Datos Linces.\"\n");
+    fprintf(fPlotter, "plot \"y_sol.txt\" using 1:2 smooth csplines lw 3 lt 6 lc rgb \"red\" title \"Nodo Sinoatrial \" \n");
     fprintf(fPlotter,"set terminal png size 1200,600\n");
     fprintf(fPlotter,"set output \"vdp_curve%d.png\"\n",total_size);
     fprintf(fPlotter,"replot\n");
@@ -35,12 +38,12 @@ void plotGNU(int total_size,double *range){
     //phase diagram
     fprintf(fPlotter,"set terminal x11 1 size 1200,600\n");
     fprintf(fPlotter,"set title \"Plano de fase\" \n");
-    fprintf(fPlotter,"set xlabel \" y(mv) \" \n");
+    fprintf(fPlotter,"set xlabel \" y \" \n");
     fprintf(fPlotter,"set xrange [-4:4] \n");
-    fprintf(fPlotter,"set ylabel \" v(t) \" \n");
-    //fprintf(fPlotter,"set yrange [-10:10] \n");
+    fprintf(fPlotter,"set ylabel \" u \" \n");
+    fprintf(fPlotter,"set yrange [-20:20] \n");
 
-    fprintf(fPlotter, "plot \"phase_data.txt\" with lines lw 3 lt 2 title \"Orbita de Sol.\"\n");
+    fprintf(fPlotter, "plot \"phase_data.txt\" with lines lw 3 lt 2 title \"Orbita.\"\n");
     fprintf(fPlotter,"set terminal png size 1200,600\n");
     fprintf(fPlotter,"set output \"phase_diagram%d.png\"\n",total_size);
     fprintf(fPlotter,"replot\n");
@@ -48,31 +51,44 @@ void plotGNU(int total_size,double *range){
     fclose(fPlotter);
 }
 
-/*Van Der Pol equation as 2 first grade equations with variables t,y,u*/
-double vdpOscillator(double *var, int equation){
-    //parameters
-    double k = 30.0;     //damping factor 
-    double a = 60.0;     //restoring factor
-    double solution;
+// Allocate matrix 
+double **genMatrix(int rows, int cols) {
+    // Allocate rows 
+    double **matrix, *temp;
+    matrix = (double **)malloc(rows * sizeof(double *)); // Espacio para los apuntadores
 
-    if(equation == 0){
-        // y'= u
-        solution = var[1];
-    }else if(equation == 1){
-        //u' = k(1-y^2)u - ay
-        solution = k * (1 - var[0]*var[0])*var[1] - a*var[0];
+    if(matrix == NULL) {
+        printf("Error de asignacion de memoria.\n");
+        return NULL;
     }
 
-    return solution;
+    //Allocate columns per row
+    temp = (double *)calloc(rows * cols, sizeof(double));
+
+    if(temp == NULL) {
+        printf("Error de asignacion de memoria.\n");
+        free(matrix); 
+        return NULL;
+    }
+
+    // Make each row point to their respective colum
+    for(int i = 0; i < rows; i++) {
+        matrix[i] = &temp[i * cols];
+    }
+
+    // Retornando la matriz
+    return matrix;
+}
+
+//copy double vector 1(1xn) into 2(1xn) 
+void copyVector(double *vector_1, double *vector_2, int n){
+    for(int i=0; i<n; i++){
+        vector_2[i] = vector_1[i];
+    }
 }
 
 /*Van Der Pol modified equation as 2 first grade euqations with variables t,y,u*/
-double vdpOscillatorModified(double *var, int equation){
-    //parameters
-    double v[2] = {1.5,-1.5};   //depolarization - fractal speed 
-    double k = 4.0;     //damping factor 
-    double d = 6.0;
-    double e = 8.0; 
+double vdpOscillatorModified(double *var, int equation){   
     double solution;
 
     if(equation == 0){
@@ -80,7 +96,7 @@ double vdpOscillatorModified(double *var, int equation){
         solution = var[1];
     }else if(equation == 1){
         //v' = -k(y - v_1)(y  - v_2)u - [y(y + d)(y + e)] / de
-        solution = -k * (var[0]-v[0])*(var[0]-v[1] )*var[1] - 
+        solution = -mu * (var[0]-v1)*(var[0]-v2 )*var[1] - 
         (var[0]*(var[0] + d)*(var[0] + e)) / d*e;
     }
 
@@ -90,7 +106,7 @@ double vdpOscillatorModified(double *var, int equation){
 /*4th order Runge-Kuta method for m ordinary differential equations*/
 double **solveRungeKuta(double (*F)(double *,int), double *range, int n, int m, double *init_c){
     //solutions matrix (n+1 solutions, m variables + independent variable)
-    double **solution = genMatriz_double(n+1,m+1);
+    double **solution = genMatrix(n+1,m+1);
     //set of 4th grade approximations, m equations
     double k[4][m];
     //set size of steps
@@ -157,12 +173,27 @@ double **solveRungeKuta(double (*F)(double *,int), double *range, int n, int m, 
     return solution;
 }
 
-int main(){
-    //equation system parameters
+int main(int argc, char **argv){
+
+    //parameters
+    if(argc < 6){
+        printf("Argumentos insuficientes: 1. v1, 2. v2, 3. mu, 4. e, 5. d\n");
+        return 0;
+    }
+
+    //solver method parameters
     double range[2] = {0,3};   //solution range 
     int n = 500;                 //number of steps 
     int m = 2;                  //number of equations/variables
     double init_c[2] = {2.0,0.0};  //initial conditions y(0), v(0)
+
+    //equation parameters
+    v1 = atof(argv[1]);
+    v2 = atof(argv[2]);
+    mu = atof(argv[3]);
+    e = atof(argv[4]);
+    d = atof(argv[5]);
+    printf("v1: %f, v2: %f, mu: %f, e: %f, d: %f\n",v1,v2,mu,e,d);
 
     //solve ordinal differential equation
     double **solution = solveRungeKuta(vdpOscillatorModified,range,n,m,init_c);
@@ -181,5 +212,6 @@ int main(){
     //plot interpolated data
     plotGNU(n,range);
 
-    freeMatrix(1,solution);
+    free(solution[0]);
+    free(solution);
 }

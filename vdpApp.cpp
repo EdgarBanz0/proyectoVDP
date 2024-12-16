@@ -162,7 +162,7 @@ class vdpSolver{
             fprintf(fPlotter,"set xlabel \" y(mv) \" \n");
             fprintf(fPlotter,"set xrange [-4:4] \n");
             fprintf(fPlotter,"set ylabel \" u \" \n");
-            fprintf(fPlotter,"set yrange [-15:15] \n");
+            fprintf(fPlotter,"set yrange [-20:20] \n");
 
             fprintf(fPlotter, "plot \"/home/edgarbanzo/Programs/NM/proyectoVDP/resources/phase_data.txt\" with lines lw 3 lt 2 title \"Orbita de Sol.\"\n");
             fprintf(fPlotter,"set terminal png size 1000,650\n");
