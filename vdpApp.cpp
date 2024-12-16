@@ -334,7 +334,7 @@ class MyFrame : public wxFrame{
         wxTimer *timer;             //pointer to instance of timer to change gif frame
         int frameCount = 0;             //frame id to display
 
-        void resetFrame();
+        void setSpinControlValues(double set_v1,double set_v2, double set_a,double set_d,double set_e);
 
         //static event handling
         void OnComboBoxSelection(wxCommandEvent& event);
@@ -445,19 +445,51 @@ MyFrame::MyFrame(wxBoxSizer *sizer)
     Bind(wxEVT_SPINCTRLDOUBLE,&MyFrame::OndSpinChange,this,SPINCTRL4);
     Bind(wxEVT_SPINCTRLDOUBLE,&MyFrame::OneSpinChange,this,SPINCTRL5);
     timer->Bind(wxEVT_TIMER, &MyFrame::ChangeFrame, this);
-    timer->Start(80);
+    timer->Start(70);
 }
 
-
-/*reset values on spin controls to their default states*/
-void MyFrame::resetFrame(){
-
+/*Set values to parameters v1, v2, a, d, e*/
+void MyFrame::setSpinControlValues(double set_v1,double set_v2, double set_a,double set_d,double set_e){
+    v_1->SetValue(set_v1);
+    v_2->SetValue(set_v2);
+    a->SetValue(set_a);
+    d->SetValue(set_d);
+    e->SetValue(set_e);
 }
  
 
 /*Selection made on type of processing list*/
 void MyFrame::OnComboBoxSelection(wxCommandEvent& event){
 
+    switch (statesList->GetSelection()){
+    case 0:
+        //rest state values
+        setSpinControlValues(0.8,0.8, 15.0, 6.0, 8.0);
+        vdpEquation.setParameters(0.8,0.8, 15.0, 6.0, 8.0);
+        //set new gif frequency
+        timer->Start(70);
+        break;
+    case 1:
+        //high freq state values
+        setSpinControlValues(0.8,0.8, 15.0, 7.0, 14.0);
+        vdpEquation.setParameters(0.8,0.8, 15.0, 7.0, 14.0);
+        //set new gif frequency
+        timer->Start(40);
+        break;
+    case 2:
+        //low freq state values
+        setSpinControlValues(0.8,0.8, 15.0, 6.0, 6.0);
+        vdpEquation.setParameters(0.8,0.8, 15.0, 6.0, 6.0);
+        //set new gif frequency
+        timer->Start(85);
+        break; 
+    default:
+        break;
+    }
+
+    //show plot
+    drawPanel->setImage(vdpEquation.getPlot(1),wxBITMAP_TYPE_PNM);
+    drawPanel->Refresh();
     
 }
 
